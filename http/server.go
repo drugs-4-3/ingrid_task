@@ -1,7 +1,6 @@
 package http
 
 import (
-	"git.limango.tech/osp/logger"
 	"github.com/drugs-4-3/ingrid_task/utils"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -31,7 +30,7 @@ func NewServer() (*http.Server, error) {
 	}
 	sReadTimeout, err := strconv.Atoi(sReadTimeoutStr)
 	if err != nil {
-		logger.Error(err)
+		return nil, err
 	}
 
 	SetUpEndpoints(router)

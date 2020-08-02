@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/drugs-4-3/ingrid_task/models"
 	"github.com/drugs-4-3/ingrid_task/service"
 	"log"
@@ -22,33 +21,27 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 	srcCoordinates, err := models.NewCoordinateFromString(source[0])
 	if err != nil {
-		respond(w, http.StatusBadRequest, "incorrect \"src\" parameter: " + err.Error())
+		respond(w, http.StatusBadRequest, "incorrect \"src\" parameter: "+err.Error())
 		return
 	}
 
 	dstCoordinates, err := models.NewCoordinatesCollectionFromString(destination)
 	if err != nil {
-		respond(w, http.StatusBadRequest, "incorrect \"dst\" parameter: " + err.Error())
+		respond(w, http.StatusBadRequest, "incorrect \"dst\" parameter: "+err.Error())
 		return
 	}
 
 	routesResp, err := service.GetService().GetRoutes(service.RoutesRequestParams{
-		Ctx:         r.Context(),
-		Source:      srcCoordinates,
+		Ctx:          r.Context(),
+		Source:       srcCoordinates,
 		Destinations: dstCoordinates,
 	})
 	if err != nil {
-		respond(w, http.StatusInternalServerError, "could not load routes: " + err.Error())
+		respond(w, http.StatusInternalServerError, "could not load routes: "+err.Error())
 		return
 	}
-	fmt.Printf("%+v\n", *routesResp)
 
-
-	w.WriteHeader(http.StatusOK)
-	// todo: write json response
-	//if _, err := w.Write([]byte("not implemented")); err != nil {
-	//	log.Println("error writing response")
-	//}
+	respondOk(w, *routesResp)
 }
 
 type Response struct {
@@ -70,5 +63,19 @@ func respond(w http.ResponseWriter, status int, message string) {
 	_, err = w.Write(payload)
 	if err != nil {
 		log.Println("cannot write response: " + err.Error())
+	}
+}
+
+func respondOk(w http.ResponseWriter, response service.RoutesResponse) {
+	payload, err := json.Marshal(response)
+	if err != nil {
+		log.Println("cannot marshal response: %s", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(payload); err != nil {
+		log.Println("cannot write response: %s", err.Error())
 	}
 }
